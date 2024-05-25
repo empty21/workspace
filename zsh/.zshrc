@@ -9,3 +9,5 @@ done
 
 source $ZSH/oh-my-zsh.sh
 source $HOME/.p10k.zsh
+source ~/.nvm/nvm.sh
+export PATH=$PATH:$HOME/.local/bin:$HOME/go/bin

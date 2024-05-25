@@ -8,6 +8,7 @@ env:
   image: '{{ default "ghcr.io/empty21/workspace" .image }}'
   workspace: '{{ default .HOME .workspace }}'
   hostname: '{{ default "Stupd" .hostname }}'
+  timezone: '{{ default "Asia/Ho_Chi_Minh" .timezone }}'
 
 tasks:
   recreate:
@@ -24,7 +25,9 @@ tasks:
     cmd: |
       docker run --rm -d --privileged \
           {{ if not .ignore_docker }}-v {{ .docker_socket }}:/var/run/docker.sock {{ end }} \
+          -v ~/.ssh:/root/.ssh \
           -v {{ .workspace }}:/workspace \
+          -e TZ={{ .timezone }} \
           --name={{ .name }} \
           --hostname={{ .hostname }} \
           {{ .image }}

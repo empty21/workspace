@@ -34,6 +34,13 @@ RUN apt install -y \
     pip \
     golang-go
 
+
+# Install lazygit
+RUN go install github.com/jesseduffield/lazygit@latest
+
+# Install nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
 # Config zsh
 RUN touch $HOME/.zshrc && \
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
@@ -45,6 +52,10 @@ RUN touch $HOME/.zshrc && \
 COPY zsh/custom /root/.oh-my-zsh/custom
 COPY zsh/.p10k.zsh /root/.p10k.zsh
 COPY zsh/.zshrc /root/.zshrc
+
+# Install node
+SHELL ["/bin/zsh", "-c"]
+RUN source ~/.zshrc && nvm install --lts
 
 # Config tmux
 COPY tmux/tmux.conf /root/.tmux.conf
