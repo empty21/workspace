@@ -1,0 +1,62 @@
+# Install taskfile: https://taskfile.dev/#/installation
+# Put this file in the home directory
+# Run `task -g work workspace=$PATH_TO_PROJECT` to start working
+version: 3
+
+env:
+  name: '{{ default "workspace" .name }}'
+  image: '{{ default "ghcr.io/empty21/workspace" .image }}'
+  workspace: '{{ default .HOME .workspace }}'
+  hostname: '{{ default "Stupd" .hostname }}'
+
+tasks:
+  recreate:
+    desc: "Recreate the container"
+    cmds:
+      - cmd: task stop 2> /dev/null || true
+      - task: start
+  start:
+    preconditions:
+      - sh: test -z "$(docker ps -q -f name={{ .name }})"
+        msg: "Container is already running"
+    aliases:
+      - up
+    cmd: |
+      docker run --rm -d --privileged \
+          {{ if not .ignore_docker }}-v {{ .docker_socket }}:/var/run/docker.sock {{ end }} \
+          -v {{ .workspace }}:/workspace \
+          --name={{ .name }} \
+          --hostname={{ .hostname }} \
+          {{ .image }}
+    vars:
+      docker_socket: '{{ default "/var/run/docker.sock" .docker_socket }}'
+    requires:
+      vars:
+        - workspace
+
+  stop:
+    preconditions:
+      - sh: test -n "$(docker ps -q -f name={{ .name }})"
+        msg: "Container is not running"
+    aliases:
+      - down
+    cmd: docker stop {{ .name }}
+
+  exec:
+    aliases:
+      - shell
+      - s
+    preconditions:
+      - sh: test -n "$(docker ps -q -f name={{ .name }})"
+        msg: "Container is not running"
+    cmd: docker exec -it {{ .name }} {{ .entrypoint }}
+    vars:
+      entrypoint: '{{ default "/bin/zsh" .entrypoint }}'
+
+  work:
+    desc: "Run the start task"
+    aliases:
+      - w
+    cmds:
+      - cmd: task start 2> /dev/null || true
+      - task: exec
